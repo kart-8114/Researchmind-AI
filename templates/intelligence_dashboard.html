@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Intelligence Trace - ResearchMind AI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f0f2f5; font-family: 'Inter', sans-serif; }
+        .trace-card { border: none; border-radius: 12px; margin-bottom: 30px; background: white; padding: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+        .arrow { font-size: 24px; text-align: center; margin: -15px 0 15px 0; color: #0d6efd; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm mb-4">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="/">ResearchMind AI</a>
+        <div class="ms-auto d-flex align-items-center">
+            <a href="/history" class="btn btn-sm btn-light me-2">Library</a>
+            <a href="/logout" class="btn btn-sm btn-outline-light">Logout</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container pb-5">
+    <div class="text-center mb-5">
+        <h2 class="fw-bold">Intelligent Pipeline Trace (Unit 1-4)</h2>
+        <p class="text-muted">Visualizing how OpenAI language analysis and syllabus-aligned classical AI algorithms transform literature into a research plan.</p>
+    </div>
+
+    <!-- Step 1: Comparison Matrix -->
+    <div class="trace-card">
+        <h5 class="fw-bold text-primary mb-4">1. Information Extraction & Comparison</h5>
+        <div class="table-responsive">
+            <table class="table table-sm table-bordered">
+                <thead class="table-light">
+                    <tr>
+                        <th>Paper</th>
+                        <th>Algorithm</th>
+                        <th>Problem</th>
+                        <th>Limitation</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for paper in collection.papers %}
+                    <tr>
+                        <td>{{ paper.filename[:20] }}</td>
+                        <td>{{ paper.algos }}</td>
+                        <td>{{ paper.problem }}</td>
+                        <td>{{ paper.limitation }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="arrow">↓</div>
+
+    <!-- OpenAI Language Analysis -->
+    <div class="trace-card border-dark shadow-sm">
+        <h5 class="fw-bold mb-3">🤖 OpenAI Literature Understanding</h5>
+        <p class="small text-muted mb-2">OpenAI is used for natural-language understanding: summarization, information extraction, and research-gap analysis. The classical AI algorithms remain responsible for reasoning, ranking, and planning.</p>
+        <div class="row g-2">
+            <div class="col-md-4"><span class="badge bg-dark p-2 w-100">Summary</span></div>
+            <div class="col-md-4"><span class="badge bg-dark p-2 w-100">Algorithms / Datasets / Metrics</span></div>
+            <div class="col-md-4"><span class="badge bg-dark p-2 w-100">Research Gaps</span></div>
+        </div>
+    </div>
+
+    <div class="arrow">↓</div>
+
+    <!-- Step 2: Gap Detection -->
+    <div class="trace-card">
+        <h5 class="fw-bold text-primary mb-4">2. Evidence-Based Research Gap Detection & Analysis</h5>
+        <p class="small text-muted mb-3">The system synthesized limitations across all library entries to infer systemic architectural research barriers:</p>
+        <div class="row g-3">
+            {% if enriched_gaps %}
+                {% for gap in enriched_gaps %}
+                <div class="col-md-4">
+                    <div class="p-3 border-start border-danger border-4 bg-danger bg-opacity-10 rounded shadow-sm h-100">
+                        <strong class="text-danger small text-uppercase d-block mb-1">Identified Literature Gap</strong>
+                        <span class="fw-bold text-dark d-block mb-2">{{ gap.title }}</span>
+                        <p class="small text-dark mb-1"><strong>Description:</strong> {{ gap.description }}</p>
+                        <p class="small text-muted mb-1"><strong>Impact:</strong> {{ gap.impact }}</p>
+                        <p class="small text-success mb-0"><strong>Mitigation:</strong> {{ gap.mitigation }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                {% for gap in gaps %}
+                <div class="col-md-4">
+                    <div class="p-3 border-start border-danger border-4 bg-danger bg-opacity-10 rounded shadow-sm h-100">
+                        <strong class="text-danger small text-uppercase d-block mb-1">Identified Literature Gap</strong>
+                        <span class="fw-semibold text-dark">{{ gap }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="arrow">↓</div>
+
+    <!-- Step 3: Forward Chaining -->
+    <div class="trace-card">
+        <h5 class="fw-bold text-primary mb-4">3. Forward Chaining Reasoning (Unit 3)</h5>
+        <div class="p-3 bg-light rounded border">
+            <div class="small text-muted mb-2">Inference Logic:</div>
+            <p class="mb-0">Based on the domain and extracted facts, the agent infers the project objective: <br>
+            <strong class="text-success fs-5">Goal: {{ project_title }}</strong></p>
+        </div>
+    </div>
+
+    <div class="arrow">↓</div>
+
+    <!-- Step 4: Best-First Search -->
+    <div class="trace-card">
+        <h5 class="fw-bold text-primary mb-4">4. Best-First Search Candidate Selection (Unit 2)</h5>
+        <p class="small text-muted">Heuristic Evaluation (Novelty + Feasibility):</p>
+        {% for plan in ranked_plans %}
+        <div class="border rounded p-3 mb-2 bg-light-subtle">
+            <div class="d-flex justify-content-between">
+                <strong>{{ plan.title }}</strong>
+                <span class="badge bg-primary">{{ ((plan.feasibility*0.4 + plan.novelty*0.4 + plan.resource_suitability*0.2)*100)|round(1) }}% Match</span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="arrow">↓</div>
+
+    <!-- Step 5: HTN Planning -->
+    <div class="trace-card">
+        <h5 class="fw-bold text-primary mb-4">5. Hierarchical Task Network (HTN) Planning — Unit 4</h5>
+        <p class="small text-muted">The selected research project is decomposed into high-level tasks and implementation subtasks.</p>
+        {% for phase, tasks in roadmap.items() %}
+        <div class="mb-3">
+            <h6 class="text-primary fw-bold">{{ phase }}</h6>
+            <ul class="list-group list-group-flush small">
+                {% for task in tasks %}
+                    <li class="list-group-item bg-transparent">• {{ task }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="arrow">↓</div>
+
+    <!-- Step 6: Experiment Generator -->
+    <div class="trace-card border-success border-2 shadow-sm">
+        <h5 class="fw-bold text-success mb-4">🧪 7. Automated Experiment Design Specification</h5>
+        <div class="p-3 mb-4 bg-success bg-opacity-10 border border-success rounded">
+            <h6 class="fw-bold text-success">🎯 Proposed Research Question:</h6>
+            <p class="fs-5 mb-0 fw-semibold text-dark">“{{ experiment.research_question }}”</p>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <strong class="text-secondary">Proposed Method:</strong>
+                    <div class="p-2 bg-light border rounded mt-1 text-success fw-bold">{{ experiment.proposed_method }}</div>
+                </div>
+                <div class="mb-3">
+                    <strong class="text-secondary">Existing Baseline Methods:</strong>
+                    <ul class="list-group list-group-flush mt-1 border rounded">
+                        {% for baseline in experiment.baseline_methods %}
+                            <li class="list-group-item bg-transparent py-1 small">• {{ baseline }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="mb-3">
+                    <strong class="text-secondary">Dataset:</strong>
+                    <div class="p-2 bg-light border rounded mt-1 text-dark small fw-medium">{{ experiment.dataset }}</div>
+                </div>
+                <div class="mb-3">
+                    <strong class="text-secondary">Hypothesis:</strong>
+                    <p class="small text-muted mt-1">{{ experiment.hypothesis }}</p>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <strong class="text-secondary">Evaluation Metrics:</strong>
+                    <ul class="list-group list-group-flush mt-1 border rounded">
+                        {% for m in experiment.evaluation_metrics %}
+                            <li class="list-group-item bg-transparent py-1 small">• {{ m }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="mb-3">
+                    <strong class="text-secondary">Experiments to Perform:</strong>
+                    <ul class="list-group list-group-flush mt-1 border rounded">
+                        {% for exp in experiment.experiments_to_perform %}
+                            <li class="list-group-item bg-transparent py-1 small">{{ exp }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="mb-3">
+                    <strong class="text-secondary">Comparison Criteria:</strong>
+                    <div class="p-2 bg-light border rounded mt-1 text-dark small">{{ experiment.comparison_criteria }}</div>
+                </div>
+                <div class="mb-3">
+                    <strong class="text-secondary">Expected Observations:</strong>
+                    <div class="p-2 bg-light border rounded mt-1 text-dark small fw-medium text-success-emphasis bg-success-subtle">{{ experiment.expected_observations }}</div>
+                </div>
+            </div>
+        </div>
+
+        <hr class="my-4">
+        <div class="bg-primary bg-opacity-10 border border-primary p-3 rounded">
+            <h6 class="fw-bold text-primary mb-1">⭐ Why this is a Strong Difference (Novelty):</h6>
+            <p class="small mb-0 text-dark">{{ experiment.strong_difference }}</p>
+            <div class="mt-2 text-primary fw-bold small">One-line novelty for PPT: “ResearchMind AI converts identified research gaps into structured, explainable experiment designs for the next research study.”</div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

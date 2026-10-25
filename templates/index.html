@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ResearchMind AI - Intelligent Research Assistant</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .hero-section { background: linear-gradient(135deg, #0d6efd 0%, #003d99 100%); color: white; padding: 100px 0; }
+        .upload-card { border: none; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); margin-top: -50px; }
+        .btn-primary { padding: 12px 30px; border-radius: 8px; font-weight: 600; }
+    </style>
+</head>
+<body>
+
+<div class="hero-section text-center">
+    <div class="container">
+        <div class="d-flex justify-content-end mb-3">
+            <button class="btn btn-outline-info btn-sm me-2" data-bs-toggle="modal" data-bs-target="#basePaperModal">📜 Project References</button>
+            <a href="/history" class="btn btn-outline-light btn-sm me-2">History</a>
+            <a href="/logout" class="btn btn-outline-light btn-sm">Logout</a>
+        </div>
+        <h1 class="display-4 fw-bold">ResearchMind AI</h1>
+        <p class="lead">Accelerate your research with AI-powered literature analysis and project planning.</p>
+    </div>
+</div>
+
+<div class="container mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card upload-card p-5 text-center">
+                <h3 class="mb-4">Start New Analysis</h3>
+
+                {% with messages = get_flashed_messages() %}
+                  {% if messages %}
+                    {% for message in messages %}
+                      <div class="alert alert-danger">{{ message }}</div>
+                    {% endfor %}
+                  {% endif %}
+                {% endwith %}
+
+                <form action="/upload" method="POST" enctype="multipart/form-data">
+                    <div class="mb-4">
+                        <label for="pdf" class="form-label text-muted">Upload one or more research papers (PDF)</label>
+                        <input class="form-control form-control-lg" type="file" id="pdf" name="pdf" multiple required>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-lg shadow-sm">
+                        Analyze Paper(s)
+                    </button>
+                </form>
+
+                <div class="mt-4 pt-4 border-top text-start">
+                    <h5 class="mb-3 text-center">🧠 AI Ingestion & Discovery</h5>
+                    <form action="/ai_ingestion" method="POST" class="mb-3">
+                        <div class="input-group">
+                            <input type="text" class="form-control" name="topic" placeholder="Generate Paper by Topic (e.g., Robot Swarms)" required>
+                            <button type="submit" class="btn btn-outline-primary btn-sm" onclick="showLoading()">🚀 Generate</button>
+                        </div>
+                    </form>
+                    <div class="d-grid">
+                        <a href="/arxiv/search" class="btn btn-outline-success btn-sm">🔍 Discover Real Papers on arXiv</a>
+                    </div>
+                    <div id="loading" class="mt-2 text-primary small text-center" style="display: none;">
+                        Synthesizing research abstract and domain entities... Please wait.
+                    </div>
+                </div>
+
+                <p class="mt-4 text-muted small">Supports PDF extraction, summarization, classification, and research planning.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showLoading() {
+        document.getElementById('loading').style.display = 'block';
+    }
+</script>
+
+<div class="container my-5">
+    <div class="row text-center">
+        <div class="col-md-4">
+            <div class="p-4">
+                <div class="h1 text-primary">📑</div>
+                <h4>Auto Summarization</h4>
+                <p class="text-muted">Get concise, AI-generated summaries of complex research papers in seconds.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="p-4">
+                <div class="h1 text-primary">🔍</div>
+                <h4>Gap Detection</h4>
+                <p class="text-muted">Identify potential research gaps and limitations to inspire your next project.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="p-4">
+                <div class="h1 text-primary">🗺️</div>
+                <h4>Roadmap Generation</h4>
+                <p class="text-muted">Generate a suggested implementation roadmap and algorithm recommendations.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer class="text-center py-4 text-muted border-top">
+    <div class="container">
+        <p>&copy; 2026 ResearchMind AI Platform. All rights reserved.</p>
+    </div>
+</footer>
+
+<!-- Base Paper & References Modal -->
+<div class="modal fade" id="basePaperModal" tabindex="-1" aria-labelledby="basePaperModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title" id="basePaperModalLabel">📑 Project Base Paper & References</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <h4 class="fw-bold text-primary mb-3">"An Intelligent Research Assistance System using Hybrid Knowledge-Based Reasoning and Heuristic Search Algorithms"</h4>
+
+                <h6 class="fw-bold mt-4">Abstract</h6>
+                <p class="text-muted" style="line-height: 1.6; text-align: justify;">
+                    "In this paper, we propose ResearchMind AI, an <strong>Intelligent Agent</strong> designed to automate the synthesis of academic literature and the generation of structured research roadmaps. The system utilizes a dual-layer architecture: a <strong>Knowledge Representation Layer</strong> for automated summarization and domain inference, and a <strong>Symbolic AI Layer</strong> for decision support. Specifically, the system employs <strong>Forward Chaining</strong> (Unit 3) for knowledge-based reasoning to derive research recommendations from extracted facts, and <strong>Best-First Search</strong> (Unit 2) to rank generated research plans based on a <strong>Heuristic Evaluation</strong> (Unit 2) of feasibility, novelty, and resource suitability. The integration of these techniques allows for a scalable, reasoning-capable assistant that bridges the gap between raw data extraction and actionable research methodology."
+                </p>
+
+                <hr class="my-4">
+
+                <h6 class="fw-bold">📚 Foundational Syllabus Concepts (Unit 1-4)</h6>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item px-0">
+                        <strong>Reasoning:</strong> Forward Chaining & Knowledge-Based Agents (Unit 3).
+                    </li>
+                    <li class="list-group-item px-0">
+                        <strong>Search & Planning:</strong> Heuristic Functions, Best-First Search, A* (Unit 2).
+                    </li>
+                    <li class="list-group-item px-0">
+                        <strong>Strategy Decomp:</strong> Hierarchical Planning & Goal Decomposition (Unit 4).
+                    </li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

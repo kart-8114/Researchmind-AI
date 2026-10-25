@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Research Dashboard - ResearchMind AI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f0f2f5; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+        .sidebar-card { border: none; border-radius: 12px; height: 100%; }
+        .main-card { border: none; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+        .badge-custom { background-color: #e7f1ff; color: #0d6efd; border: 1px solid #cfe2ff; font-weight: 500; }
+        .roadmap-item { border-left: 3px solid #0d6efd; padding-left: 15px; margin-bottom: 15px; }
+        .navbar-brand { font-weight: 700; letter-spacing: -0.5px; }
+        /* Chatbot Style */
+        #chat-window { position: fixed; bottom: 20px; right: 20px; width: 350px; height: 450px; background: white; border-radius: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); display: none; flex-direction: column; overflow: hidden; z-index: 1000; }
+        #chat-header { background: #0d6efd; color: white; padding: 15px; font-weight: bold; display: flex; justify-content: space-between; }
+        #chat-messages { flex-grow: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .msg { padding: 10px 15px; border-radius: 10px; max-width: 80%; font-size: 0.9rem; }
+        .msg-bot { background: #f0f2f5; align-self: flex-start; }
+        .msg-user { background: #0d6efd; color: white; align-self: flex-end; }
+        #chat-input-area { padding: 10px; border-top: 1px solid #eee; display: flex; gap: 10px; }
+        #chat-btn { position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; border-radius: 30px; background: #0d6efd; color: white; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.3); z-index: 1001; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm mb-4">
+    <div class="container">
+        <a class="navbar-brand" href="/">ResearchMind AI</a>
+        <div class="ms-auto d-flex align-items-center">
+            <a href="/history" class="btn btn-sm btn-light me-2">History</a>
+            <div class="text-white-50 small me-3">
+                Analyzing: <strong>{{ paper.filename }}</strong>
+            </div>
+            <a href="/logout" class="btn btn-sm btn-outline-light">Logout</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container pb-5">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-lg-3">
+            <div class="card sidebar-card p-4 shadow-sm mb-4">
+                <h6 class="text-uppercase text-muted fw-bold small mb-3">Research Domain</h6>
+                <div class="d-grid">
+                    <span class="badge badge-custom p-3 fs-6 mb-2">{{ paper.domain }}</span>
+                    {% if knowledge_domain %}
+                    <div class="text-center small text-muted mb-4">
+                        Agent-Inferred Domain: <strong>{{ knowledge_domain }}</strong><br>
+                        Confidence: <span class="text-primary fw-bold">{{ (confidence * 100)|round(1) }}%</span>
+                    </div>
+                    {% endif %}
+                </div>
+
+
+
+                <hr>
+                <div class="d-grid gap-2">
+                    <button class="btn btn-info btn-sm text-white" data-bs-toggle="modal" data-bs-target="#citationModal">Generate Citation</button>
+                    <a href="/download_report/{{ paper.id }}" class="btn btn-success btn-sm">Download Full Report</a>
+                    <a href="/" class="btn btn-outline-primary btn-sm">New Analysis</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-lg-9">
+            <!-- OpenAI / AI Summary -->
+            <div class="card main-card p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="mb-0">AI Research Summary</h4>
+                    {% if openai_enabled %}
+                    <span class="badge bg-dark">OpenAI</span>
+                    {% endif %}
+                </div>
+                <p class="lead" style="line-height: 1.8; color: #333;">{{ paper.summary }}</p>
+            </div>
+
+            {% if openai_analysis %}
+            <div class="card main-card p-4 border-dark shadow-sm">
+                <h5 class="fw-bold mb-4">🤖 OpenAI Literature Analysis</h5>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <strong class="small text-uppercase text-muted">Problem Addressed</strong>
+                        <div class="p-3 bg-light rounded mt-1">{{ openai_analysis.problem }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <strong class="small text-uppercase text-muted">Key Contributions</strong>
+                        <ul class="list-group list-group-flush mt-1 border rounded">
+                            {% for item in openai_analysis.key_contributions %}
+                            <li class="list-group-item bg-transparent small">• {{ item }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <strong class="small text-uppercase text-muted">Limitations</strong>
+                        <ul class="list-group list-group-flush mt-1 border rounded">
+                            {% for item in openai_analysis.limitations %}
+                            <li class="list-group-item bg-transparent small">• {{ item }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <strong class="small text-uppercase text-muted">Future Work</strong>
+                        <ul class="list-group list-group-flush mt-1 border rounded">
+                            {% for item in openai_analysis.future_work %}
+                            <li class="list-group-item bg-transparent small">• {{ item }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Forward Chaining + OpenAI Project Recommendation -->
+            <div class="card main-card p-4 bg-light border-primary shadow-sm">
+                <h4 class="text-primary mb-3">⭐ AI Project Recommendation</h4>
+                <p class="mb-1"><strong>Suggested Title:</strong> {{ project_title }}</p>
+                {% if selected_project.problem_statement %}
+                <p class="mb-2"><strong>Problem Statement:</strong> {{ selected_project.problem_statement }}</p>
+                {% endif %}
+                <div class="small text-muted"><em>OpenAI generated candidate projects; Forward Chaining selected the project using extracted literature facts.</em></div>
+                {% if selected_project.forward_chain_reasons %}
+                <div class="mt-3">
+                    <strong class="small text-uppercase text-muted">Forward Chaining Facts Triggered</strong>
+                    <ul class="small mt-2 mb-0">
+                        {% for reason in selected_project.forward_chain_reasons %}<li>{{ reason }}</li>{% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+                <div class="row mt-3 g-2">
+                    <div class="col-md-4"><div class="p-2 bg-white rounded border small"><strong>Algorithms:</strong><br>{{ selected_project.algorithms|join(', ') }}</div></div>
+                    <div class="col-md-4"><div class="p-2 bg-white rounded border small"><strong>Datasets:</strong><br>{{ selected_project.datasets|join(', ') }}</div></div>
+                    <div class="col-md-4"><div class="p-2 bg-white rounded border small"><strong>Metrics:</strong><br>{{ selected_project.metrics|join(', ') }}</div></div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Best-First Search Ranked Plans -->
+                <div class="col-md-12">
+                    <div class="card main-card p-4">
+                        <h5 class="mb-4">🏆 Ranked Research Plans (Best-First Search)</h5>
+                        <p class="text-muted small mb-4">Plans ranked using a heuristic evaluation of Feasibility, Novelty, and Resource Suitability.</p>
+
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Research Path</th>
+                                        <th>Heuristic Score</th>
+                                        <th>Details</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for plan in ranked_plans %}
+                                    <tr>
+                                        <td>
+                                            <div class="fw-bold text-primary">{{ plan.title }}</div>
+                                            <div class="small text-muted">{{ plan.description }}</div>
+                                        </td>
+                                        <td>
+                                            <div class="progress" style="height: 10px; width: 100px;">
+                                                {% set score = (plan.feasibility * 0.4 + plan.novelty * 0.4 + plan.resource_suitability * 0.2) * 100 %}
+                                                <div class="progress-bar" role="progressbar" style="width: {{ score }}%;" aria-valuenow="{{ score }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                            </div>
+                                            <div class="small mt-1 fw-bold">{{ score|round(1) }}%</div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle">F: {{ (plan.feasibility * 10)|round(0) }}</span>
+                                            <span class="badge bg-warning-subtle text-warning border border-warning-subtle">N: {{ (plan.novelty * 10)|round(0) }}</span>
+                                            <span class="badge bg-info-subtle text-info border border-info-subtle">S: {{ (plan.resource_suitability * 10)|round(0) }}</span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="mt-2 small text-muted text-end"><em>Logic: Best-First Search — heuristic priority queue (heap)</em></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- HTN Project Roadmap -->
+            {% if roadmap %}
+            <div class="card main-card p-4 border-warning shadow-sm">
+                <h5 class="fw-bold mb-2">🧭 Project Roadmap — HTN Planning</h5>
+                <p class="small text-muted">Hierarchical Task Network (HTN) decomposes the selected project into high-level tasks and implementation subtasks.</p>
+                {% for phase, tasks in roadmap.items() %}
+                <div class="roadmap-item">
+                    <h6 class="fw-bold mb-1">{{ phase }}</h6>
+                    <ul class="mb-0 small">
+                        {% for task in tasks %}<li>{{ task }}</li>{% endfor %}
+                    </ul>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Experiment Design Generator (New Phase 4 Feature) -->
+            {% if experiment %}
+            <div class="card main-card p-4 border-success border-2 shadow-sm">
+                <h5 class="fw-bold text-success mb-4">🧪 Automated Experiment Design Specification</h5>
+
+                <div class="p-3 mb-4 bg-success bg-opacity-10 border border-success rounded">
+                    <h6 class="fw-bold text-success small text-uppercase">Proposed Research Question</h6>
+                    <p class="fs-5 mb-0 fw-semibold text-dark">“{{ experiment.research_question }}”</p>
+                </div>
+
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <strong class="text-secondary small text-uppercase">Proposed Method Upgrade</strong>
+                            <div class="p-2 bg-light border rounded mt-1 text-success fw-bold">{{ experiment.proposed_method }}</div>
+                        </div>
+                        <div class="mb-3">
+                            <strong class="text-secondary small text-uppercase">Benchmark Dataset</strong>
+                            <div class="p-2 bg-light border rounded mt-1 text-dark small fw-medium">{{ experiment.dataset }}</div>
+                        </div>
+                        <div class="mb-3">
+                            <strong class="text-secondary small text-uppercase">Baseline Methods</strong>
+                            <ul class="list-group list-group-flush mt-1 border rounded">
+                                {% for baseline in experiment.baseline_methods %}
+                                    <li class="list-group-item bg-transparent py-1 small">• {{ baseline }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <strong class="text-secondary small text-uppercase">Experiments to Perform</strong>
+                            <ul class="list-group list-group-flush mt-1 border rounded">
+                                {% for exp in experiment.experiments_to_perform %}
+                                    <li class="list-group-item bg-transparent py-1 small">• {{ exp }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        <div class="mb-3">
+                            <strong class="text-secondary small text-uppercase">Expected Observations</strong>
+                            <div class="p-2 bg-success bg-opacity-10 border border-success-subtle rounded mt-1 text-dark small fw-medium">
+                                {{ experiment.expected_observations }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 p-3 bg-primary bg-opacity-10 border border-primary rounded">
+                    <h6 class="fw-bold text-primary mb-1">⭐ Why this is a Strong Difference (Novelty)</h6>
+                    <p class="small mb-0 text-dark">{{ experiment.strong_difference }}</p>
+                    <div class="mt-2 text-primary fw-bold small">One-line novelty for PPT: “ResearchMind AI converts identified research gaps into structured, explainable experiment designs for the next research study.”</div>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="row">
+                <!-- Research Gaps -->
+                <div class="col-md-6">
+                    <div class="card main-card p-4 shadow-sm h-100">
+                        <h5 class="mb-4 fw-bold text-dark">🔍 Identified Research Gaps & Analysis</h5>
+                        {% if enriched_gaps %}
+                            <div class="d-flex flex-column gap-3">
+                                {% for gap in enriched_gaps %}
+                                    <div class="p-3 border-start border-danger border-4 bg-light rounded shadow-sm">
+                                        <h6 class="fw-bold text-danger mb-1">📌 {{ gap.title }}</h6>
+                                        <p class="small text-dark mb-1"><strong>Description:</strong> {{ gap.description }}</p>
+                                        <p class="small text-muted mb-1"><strong>Impact:</strong> {{ gap.impact }}</p>
+                                        <p class="small text-success mb-0"><strong>Mitigation:</strong> {{ gap.mitigation }}</p>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <ul class="list-group list-group-flush">
+                                {% for gap in gaps %}
+                                    <li class="list-group-item bg-transparent px-0 text-muted">• {{ gap }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Related Literature Recommendations -->
+                <div class="col-md-6">
+                    <div class="card main-card p-4">
+                        <h5 class="mb-4">📚 Similar Research (arXiv)</h5>
+                        {% if recommended_papers %}
+                            <ul class="list-group list-group-flush">
+                                {% for rec in recommended_papers %}
+                                    <li class="list-group-item bg-transparent px-0">
+                                        <a href="{{ rec.url }}" target="_blank" class="fw-bold small text-primary text-decoration-none d-block mb-1">{{ rec.title }}</a>
+                                        <div class="d-flex justify-content-between small text-muted">
+                                            <span>{{ rec.category }}</span>
+                                            <span class="badge bg-light text-dark">{{ (rec.similarity * 100)|round(1) }}% match</span>
+                                        </div>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p class="text-muted small italic">No recommendations available.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chatbot UI -->
+<div id="chat-btn" onclick="toggleChat()">💬</div>
+<div id="chat-window">
+    <div id="chat-header">
+        <span>Research Assistant</span>
+        <span style="cursor:pointer" onclick="toggleChat()">×</span>
+    </div>
+    <div id="chat-messages">
+        <div class="msg msg-bot">Hello! Ask me anything about this research paper.</div>
+    </div>
+    <div id="chat-input-area">
+        <input type="text" id="chat-input" class="form-control" placeholder="Type your question..." aria-label="Ask a question about the paper">
+        <button class="btn btn-primary" onclick="sendMessage()">Send</button>
+    </div>
+</div>
+
+<!-- Citation Modal -->
+<div class="modal fade" id="citationModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Cite Research: {{ paper.filename }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-4">
+                    <h6>APA Format</h6>
+                    <code class="d-block p-3 bg-light rounded" id="apa-cite">Loading...</code>
+                </div>
+                <div class="mb-4">
+                    <h6>IEEE Format</h6>
+                    <code class="d-block p-3 bg-light rounded" id="ieee-cite">Loading...</code>
+                </div>
+                <div>
+                    <h6>BibTeX</h6>
+                    <pre class="d-block p-3 bg-light rounded small" id="bibtex-cite">Loading...</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    const citationModal = document.getElementById('citationModal');
+    citationModal.addEventListener('show.bs.modal', async () => {
+        const res = await fetch('/papers/{{ paper.id }}/citation');
+        const data = await res.json();
+        document.getElementById('apa-cite').innerText = data.apa;
+        document.getElementById('ieee-cite').innerText = data.ieee;
+        document.getElementById('bibtex-cite').innerText = data.bibtex;
+    });
+
+    function toggleChat() {
+        const win = document.getElementById('chat-window');
+        win.style.display = win.style.display === 'flex' ? 'none' : 'flex';
+    }
+
+    async function sendMessage() {
+        const input = document.getElementById('chat-input');
+        const text = input.value.trim();
+        if (!text) return;
+
+        const messages = document.getElementById('chat-messages');
+        messages.innerHTML += `<div class="msg msg-user">${text}</div>`;
+        input.value = '';
+        messages.scrollTop = messages.scrollHeight;
+
+        const response = await fetch('/chat', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({paper_id: "{{ paper.id }}", query: text})
+        });
+        const data = await response.json();
+
+        messages.innerHTML += `<div class="msg msg-bot">${data.response}</div>`;
+        messages.scrollTop = messages.scrollHeight;
+    }
+
+    document.getElementById('chat-input').addEventListener('keypress', (e) => {
+        if(e.key === 'Enter') sendMessage();
+    });
+</script>
+
+</body>
+</html>

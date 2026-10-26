@@ -31,27 +31,54 @@ def best_first_search_plans(candidate_plans):
     return ranked
 
 
-def generate_dynamic_plans(domain, gaps, ai_candidates=None):
-    """Build Best-First candidates from OpenAI suggestions and rank them locally."""
+def generate_dynamic_plans(domain, gaps, ai_candidates=None, paper_features=None):
+    """Build Best-First candidates from OpenAI suggestions or local fallback and rank them using dynamic evidence-based scores."""
     candidates = []
+    paper_features = paper_features or {}
+    algos = paper_features.get("algos", "")
+    datasets = paper_features.get("datasets", "")
+    metrics = paper_features.get("metrics", "")
+    citations = paper_features.get("citations", 0)
 
     for i, candidate in enumerate(ai_candidates or []):
         c = dict(candidate)
         c.setdefault("description", c.get("problem_statement", "AI-generated research direction."))
         c.setdefault("id", f"openai_plan_{i}")
-        c.setdefault("feasibility", 0.6)
-        c.setdefault("novelty", 0.6)
-        c.setdefault("resource_suitability", 0.6)
+        
+        # Dynamic score computation based on evidence
+        feas = 0.6
+        if algos and algos != "N/A": feas += 0.15
+        if datasets and datasets != "N/A": feas += 0.1
+        c.setdefault("feasibility", round(min(0.95, feas), 2))
+        
+        nov = 0.65 + (0.05 * i)
+        if "efficiency" in str(gaps).lower() or "generalization" in str(gaps).lower():
+            nov += 0.1
+        c.setdefault("novelty", round(min(0.95, nov), 2))
+        
+        res = 0.6
+        if metrics and metrics != "N/A": res += 0.2
+        if citations > 5: res += 0.1
+        c.setdefault("resource_suitability", round(min(0.95, res), 2))
+        
         candidates.append(c)
 
     if not candidates:
         for i, gap in enumerate(gaps[:3]):
+            feas = 0.5 + (0.08 * i)
+            if algos and algos != "N/A": feas += 0.15
+            
+            nov = 0.85 - (0.08 * i)
+            
+            res = 0.65
+            if datasets and datasets != "N/A": res += 0.15
+
             candidates.append({
                 "title": f"Addressing Gap: {gap}",
                 "description": f"Proposed research to solve the {gap.lower()} limitation in {domain}.",
-                "feasibility": 0.5 + (0.1 * i),
-                "novelty": 0.9 - (0.1 * i),
-                "resource_suitability": 0.7,
+                "feasibility": round(min(0.95, feas), 2),
+                "novelty": round(min(0.95, nov), 2),
+                "resource_suitability": round(min(0.95, res), 2),
                 "id": f"fallback_plan_{i}"
             })
 

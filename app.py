@@ -693,7 +693,17 @@ def upload():
         project_title = selected_project.get("title", forward_chain(domain, algos_ext, limitation_ext))
 
         # 2. Best-First Search ranks the OpenAI candidates using the classical heuristic.
-        ranked_plans = generate_dynamic_plans(domain, gaps, fc_candidates)
+        ranked_plans = generate_dynamic_plans(
+            domain,
+            gaps,
+            fc_candidates,
+            paper_features={
+                "algos": algos_ext,
+                "datasets": datasets_ext,
+                "metrics": metrics_ext,
+                "citations": metadata.get('citations', 0)
+            }
+        )
 
         # 3. HTN Planning creates the hierarchical implementation roadmap.
         roadmap = htn_project_roadmap(

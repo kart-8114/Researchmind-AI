@@ -26,45 +26,19 @@ from reportlab.pdfgen import canvas
 import numpy as np
 import io
 from sqlalchemy.pool import NullPool
-# Import Classical AI Modules
-from recommendation import generate_dynamic_plans, solve_resource_csp
-from planner_v2 import htn_project_roadmap, generate_experiment_design
-from rules import forward_chain, forward_chain_project
+# Import Modular Services and Reasoning
+from services.pdf_processor import extract_pdf_pages
+from services.extraction_service import extract_entities
+from services.candidate_generator import generate_dynamic_plans, generate_experiment_design, enrich_research_gaps
+from services.planner import htn_project_roadmap, a_star_milestones
+from reasoning.forward_chaining import forward_chain, forward_chain_project
+from reasoning.best_first_search import solve_resource_csp
 from research_ml import ResearchKnowledgeAgent
 from openai_service import is_available as openai_available, analyze_paper, generate_project_candidates, answer_question, extract_research_gaps
 
 app = Flask(__name__)
 # CHANGED SECRET KEY to clear old "Please log in" session messages
 app.secret_key = os.getenv("SECRET_KEY", "researchmind_pro_v3_secure_key")
-
-def enrich_research_gaps(gaps):
-    enriched = []
-    for gap in gaps:
-        lower = gap.lower()
-        if "computational" in lower or "efficiency" in lower or "latency" in lower or "speed" in lower or "compute" in lower:
-            desc = "Existing models achieve high accuracy at the cost of heavy computational requirements, making real-time or resource-constrained deployment challenging."
-            impact = "Limits applicability on edge devices, embedded systems, and latency-critical environments."
-            mitigation = "Investigate model quantization, pruning, distillation, or efficient architectural redesign to maintain accuracy while reducing FLOPs."
-        elif "generalization" in lower or "dataset" in lower or "robustness" in lower or "diversity" in lower:
-            desc = "Models trained on benchmark datasets often overfit to domain-specific distributions and fail to generalize under distribution shifts."
-            impact = "Degraded real-world performance and vulnerability to adversarial examples or unseen data domains."
-            mitigation = "Incorporate domain adaptation, cross-domain zero-shot evaluation, data augmentation, or robust training regimes."
-        elif "scalability" in lower or "production" in lower:
-            desc = "Algorithms scale poorly with data volume or model parameter growth due to quadratic complexity or memory bottlenecks."
-            impact = "Impractical for enterprise-scale or large-scale production environments."
-            mitigation = "Implement distributed training strategies, memory-efficient attention mechanisms, or indexing optimizations (e.g., FAISS)."
-        else:
-            desc = f"Specific limitation identified regarding {gap.lower()}, requiring specialized architectural refinement."
-            impact = "Restricts the overall performance ceiling and robustness of baseline models."
-            mitigation = "Design targeted ablation experiments and introduce domain-specific evaluation metrics."
-            
-        enriched.append({
-            "title": gap,
-            "description": desc,
-            "impact": impact,
-            "mitigation": mitigation
-        })
-    return enriched
 
 @app.route("/collections/<int:collection_id>/analyze")
 @login_required
@@ -496,18 +470,9 @@ def upload():
         path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
         pdf.save(path)
 
-        # Extraction with 10-page limit for stability
-        full_text = ""
-        analysis_text = ""
+        # Extraction via modular PDF processor service
         try:
-            with fitz.open(path) as doc:
-                page_count = len(doc)
-                # Read all for RAG (limited to first 15 pages for extreme demo performance speed)
-                for i in range(min(15, page_count)):
-                    page_text = doc[i].get_text()
-                    full_text += page_text
-                    if i < 10:
-                        analysis_text += page_text
+            full_text, analysis_text, page_texts = extract_pdf_pages(path)
         except Exception as e:
             print(f"Extraction error: {e}")
             traceback.print_exc()
